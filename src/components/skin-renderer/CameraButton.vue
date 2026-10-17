@@ -221,4 +221,53 @@ function handleClose() {
   justify-content: center;
   gap: 12px;
 }
+
+@media (max-width: 768px) {
+  .camera-button-wrapper {
+    top: 8px;
+    right: 8px;
+  }
+
+  .camera-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+    min-height: 32px;
+  }
+
+  .camera-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .modal-header {
+    padding: 12px 16px;
+  }
+
+  .modal-header h3 {
+    font-size: 16px;
+  }
+
+  .capture-modal-content {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .preview-image {
+    max-height: 50vh;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-actions :deep(button) {
+    width: 100%;
+  }
+}
 </style>

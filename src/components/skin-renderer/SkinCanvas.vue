@@ -223,4 +223,24 @@ const canvasFilter = computed(() => {
   gap: 8px;
   margin-top: 4px;
 }
+
+@media (max-width: 599px) {
+  .corner-controls {
+    bottom: 8px;
+    right: 8px;
+    gap: 6px;
+  }
+
+  .corner-controls :deep(button) {
+    padding: 4px 10px;
+    font-size: 12px;
+    min-height: 28px;
+  }
+
+  .angle-popover {
+    width: 90vw;
+    max-width: 320px;
+    padding: 16px;
+  }
+}
 </style>

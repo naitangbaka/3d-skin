@@ -63,6 +63,14 @@ function handleClose(event: CustomEvent) {
   overflow: auto;
 }
 
+@media (max-width: 768px) {
+  .ore-modal-dialog {
+    min-width: 0;
+    width: 90vw;
+    max-width: 90vw;
+  }
+}
+
 .ore-modal-dialog::backdrop {
   background: rgba(0, 0, 0, 0.5);
 }

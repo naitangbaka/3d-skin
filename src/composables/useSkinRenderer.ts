@@ -40,7 +40,8 @@ export function useSkinRenderer(canvasRef: Ref<HTMLCanvasElement | null>) {
       enableZoom: true,
       autoRotate: false,
       fov: 70,
-      zoom: 60
+      zoom: 60,
+      modelPosition: { x: 0, y: 0.15, z: 0 }
     });
 
     viewer.value = v;

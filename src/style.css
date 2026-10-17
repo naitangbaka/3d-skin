@@ -1,0 +1,57 @@
+:root {
+  --bg-primary: #1e1e1f;
+  --bg-secondary: #242425;
+  --bg-tertiary: #313233;
+  --text-primary: #ffffff;
+  --text-secondary: #b1b2b5;
+  --text-tertiary: #8c8d90;
+  --border-color: #48494a;
+  --accent-color: #52a535;
+  --accent-hover: #6cc349;
+  --danger-color: #ca3636;
+  --success-color: #3c8527;
+
+  font-family: "Minecraft", "Segoe UI", system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#app {
+  width: 100%;
+  height: 100vh;
+}
+
+.oreui-textfield,
+.oreui-textfield * {
+  box-sizing: border-box !important;
+}
+
+.oreui-textfield input {
+  font-size: 13px !important;
+  padding: 6px 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  scrollbar-width: none;
+}

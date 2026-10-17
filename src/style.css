@@ -34,14 +34,14 @@ body {
   height: 100vh;
 }
 
-.oreui-textfield,
-.oreui-textfield * {
+.ore-textfield,
+.ore-textfield * {
   box-sizing: border-box !important;
 }
 
-.oreui-textfield input {
-  font-size: 13px !important;
-  padding: 6px 10px !important;
+.ore-textfield-input {
+  font-size: 12px !important;
+  padding: 5px 10px !important;
   width: 100% !important;
   min-width: 0 !important;
   overflow: hidden !important;

@@ -38,28 +38,6 @@ function openColorPicker(refKey: string) {
   const el = document.querySelector(`[data-color-ref="${refKey}"]`) as HTMLInputElement | null;
   el?.click();
 }
-
-function hexToValidColor(hex: string): string {
-  const cleaned = hex.replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
-  if (cleaned.length === 3) {
-    return '#' + cleaned.split('').map(c => c + c).join('');
-  }
-  if (cleaned.length === 6) {
-    return '#' + cleaned;
-  }
-  return '';
-}
-
-function onHexInput(raw: string, target: 'outlineColor' | 'glowColor' | 'bgColor') {
-  const valid = hexToValidColor(raw);
-  if (valid) {
-    if (target === 'bgColor') {
-      store.updateBackground({ color: valid });
-    } else {
-      store.updateEffects({ [target]: valid });
-    }
-  }
-}
 </script>
 
 <template>
@@ -153,12 +131,6 @@ function onHexInput(raw: string, target: 'outlineColor' | 'glowColor' | 'bgColor
               :style="{ backgroundColor: store.effects.outlineColor }"
               @click="openColorPicker('outline')"
             />
-            <Textfield
-              :model-value="store.effects.outlineColor"
-              class="hex-input"
-              maxlength="7"
-              @update:model-value="(v: string) => onHexInput(v, 'outlineColor')"
-            />
           </div>
           <input
             type="color"
@@ -199,12 +171,6 @@ function onHexInput(raw: string, target: 'outlineColor' | 'glowColor' | 'bgColor
               :style="{ backgroundColor: store.effects.glowColor }"
               @click="openColorPicker('glow')"
             />
-            <Textfield
-              :model-value="store.effects.glowColor"
-              class="hex-input"
-              maxlength="7"
-              @update:model-value="(v: string) => onHexInput(v, 'glowColor')"
-            />
           </div>
           <input
             type="color"
@@ -244,12 +210,6 @@ function onHexInput(raw: string, target: 'outlineColor' | 'glowColor' | 'bgColor
             class="color-swatch"
             :style="{ backgroundColor: store.background.color }"
             @click="openColorPicker('bg')"
-          />
-          <Textfield
-            :model-value="store.background.color"
-            class="hex-input"
-            maxlength="7"
-            @update:model-value="(v: string) => onHexInput(v, 'bgColor')"
           />
         </div>
         <input
@@ -425,18 +385,7 @@ function onHexInput(raw: string, target: 'outlineColor' | 'glowColor' | 'bgColor
   transition: border-color 0.15s;
 }
 
-.color-swatch:hover {
+.color-swatch:focus {
   border-color: var(--ore-color-foreground);
-}
-
-.hex-input {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.hex-input :deep(input) {
-  font-family: monospace;
-  font-size: 13px;
 }
 </style>

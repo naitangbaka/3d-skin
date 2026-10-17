@@ -108,11 +108,11 @@ function handleClose() {
           </div>
 
           <div class="modal-actions">
+            <Button color="secondary" @click="handleClose">
+              返回
+            </Button>
             <Button variant="primary" @click="handleDownload">
               下载
-            </Button>
-            <Button variant="secondary" @click="handleClose">
-              返回
             </Button>
           </div>
         </div>

@@ -1,8 +1,54 @@
 <script setup lang="ts">
+import { ref, watch, onMounted } from 'vue';
 import { Navbar } from '@oreui-web/vue';
 import SkinCanvas from '@/components/skin-renderer/SkinCanvas.vue';
 import SkinControls from '@/components/skin-renderer/SkinControls.vue';
 import CameraButton from '@/components/skin-renderer/CameraButton.vue';
+import RestoreConfirmModal from '@/components/RestoreConfirmModal.vue';
+import { useSkinStore } from '@/stores/skinStore';
+import { hasCache, loadCache, saveCache, clearCache } from '@/utils/cache';
+
+const store = useSkinStore();
+const showRestore = ref(false);
+
+onMounted(() => {
+  if (hasCache()) {
+    showRestore.value = true;
+  }
+});
+
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+watch(
+  () => ({
+    skin: store.skin,
+    effects: { ...store.effects },
+    background: { ...store.background }
+  }),
+  (state) => {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      saveCache(state);
+    }, 500);
+  },
+  { deep: true, immediate: false }
+);
+
+function handleRestore() {
+  const cached = loadCache();
+  if (cached) {
+    if (cached.skin) {
+      store.setSkin(cached.skin);
+    }
+    store.updateEffects(cached.effects);
+    store.updateBackground(cached.background);
+  }
+  showRestore.value = false;
+}
+
+function handleDiscard() {
+  clearCache();
+  showRestore.value = false;
+}
 </script>
 
 <template>
@@ -23,6 +69,12 @@ import CameraButton from '@/components/skin-renderer/CameraButton.vue';
         </div>
       </main>
     </div>
+
+    <RestoreConfirmModal
+      v-if="showRestore"
+      @restore="handleRestore"
+      @discard="handleDiscard"
+    />
   </div>
 </template>
 

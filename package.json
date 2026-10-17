@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@daidr/minecraft-skin-renderer": "^0.3.2",
+    "@iconify-prerendered/vue-pixel": "^0.28.1749100778",
     "@oreui-web/vue": "^0.0.1",
     "oreui-web": "^0.0.1",
     "pinia": "^3.0.0",

@@ -1,22 +1,61 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { Navbar, Button } from '@oreui-web/vue';
+import { IconBars, IconInfoCircle } from '@iconify-prerendered/vue-pixel';
 import SkinCanvas from '@/components/skin-renderer/SkinCanvas.vue';
 import SkinControls from '@/components/skin-renderer/SkinControls.vue';
 import CameraButton from '@/components/skin-renderer/CameraButton.vue';
 import RestoreConfirmModal from '@/components/RestoreConfirmModal.vue';
+import AboutModal from '@/components/AboutModal.vue';
 import { useSkinStore } from '@/stores/skinStore';
 import { hasCache, loadCache, saveCache, clearCache } from '@/utils/cache';
+import clickSound from '@/assets/sound/click.mp3';
 
 const store = useSkinStore();
 const showRestore = ref(false);
 const showControls = ref(false);
+const showAbout = ref(false);
+
+const clickAudio = new Audio(clickSound);
+clickAudio.preload = 'auto';
+
+function playClickSound() {
+  if (clickAudio.paused) {
+    clickAudio.currentTime = 0;
+    void clickAudio.play();
+  }
+}
+
+function handleGlobalClick(event: MouseEvent) {
+  const target = event.target as HTMLElement | null;
+  const clickable = target?.closest(
+    'ore-button, ore-switch, ore-checkbox, ore-slider, ' +
+      '.color-swatch, .ore-dropdown-trigger, .ore-dropdown-item, ' +
+      'button'
+  );
+  if (
+    clickable &&
+    !clickable.hasAttribute('disabled') &&
+    !clickable.hasAttribute('form-disabled')
+  ) {
+    playClickSound();
+  }
+}
+
+const audioCleanup = () => {
+  document.removeEventListener('click', handleGlobalClick, true);
+  clickAudio.pause();
+  clickAudio.src = '';
+};
 
 onMounted(() => {
   if (hasCache()) {
     showRestore.value = true;
   }
+  document.addEventListener('click', handleGlobalClick, true);
 });
+
+onBeforeUnmount(audioCleanup);
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 watch(
@@ -66,27 +105,25 @@ function toggleControls() {
           size="small"
           @click="toggleControls"
         >
-          <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
+          <IconBars class="menu-icon" width="14" height="14" />
         </Button>
         <span class="app-title">3D-SKIN</span>
+      </div>
+      <div class="header-right">
+        <Button
+          class="about-toggle"
+          variant="secondary"
+          size="small"
+          @click="showAbout = true"
+          aria-label="关于 3D-SKIN"
+        >
+          <IconInfoCircle class="about-icon" width="16" height="16" />
+        </Button>
       </div>
     </Navbar>
 
     <div class="app-body">
       <aside class="sidebar" :class="{ 'sidebar-open': showControls }">
-        <div class="sidebar-header">
-          <span class="sidebar-title">控制面板</span>
-          <Button class="sidebar-close" variant="secondary" size="small" @click="showControls = false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </Button>
-        </div>
         <SkinControls />
       </aside>
 
@@ -105,6 +142,8 @@ function toggleControls() {
       @restore="handleRestore"
       @discard="handleDiscard"
     />
+
+    <AboutModal v-if="showAbout" @close="showAbout = false" />
   </div>
 </template>
 
@@ -134,6 +173,7 @@ html, body, #app {
   height: 56px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 16px;
   --ore-navbar-background: var(--bg-secondary);
   --ore-navbar-bottom-shadow: var(--bg-secondary);
@@ -145,15 +185,42 @@ html, body, #app {
   gap: 12px;
 }
 
-.menu-toggle {
-  display: none;
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 6px;
   min-height: auto;
+  width: 36px;
+  height: 36px;
+}
+
+.about-icon {
+  display: flex;
+  width: 16px;
+  height: 16px;
+}
+
+.menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  min-height: auto;
+  width: 36px;
+  height: 36px;
 }
 
 .menu-icon {
-  width: 20px;
-  height: 20px;
+  display: flex;
+  width: 14px;
+  height: 14px;
 }
 
 .app-title {
@@ -182,26 +249,6 @@ html, body, #app {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-}
-
-.sidebar-header {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color);
-  flex-shrink: 0;
-}
-
-.sidebar-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.sidebar-close {
-  padding: 4px;
-  min-height: auto;
 }
 
 .sidebar-overlay {
@@ -256,10 +303,6 @@ html, body, #app {
     transform: translateX(0);
   }
 
-  .sidebar-header {
-    display: flex;
-  }
-
   .sidebar-overlay {
     display: block;
     position: fixed;
@@ -271,6 +314,14 @@ html, body, #app {
 
   .main-content {
     padding: 16px;
+    min-height: 0;
+  }
+
+  .canvas-container {
+    /* 用明确的视口高度替代 height:100%，避免 WebKit 下对居中/内边距 flex 父级的百分比高度解析不稳，
+       导致模型区超高、底部按钮与角度信息被裁掉 */
+    height: min(800px, calc(100dvh - 88px));
+    max-height: none;
   }
 }
 
@@ -291,7 +342,8 @@ html, body, #app {
   }
 
   .main-content {
-    flex: 1;
+    flex: none;
+    height: 45vh;
     min-height: 0;
     padding: 0;
     order: -1;
@@ -299,7 +351,7 @@ html, body, #app {
 
   .canvas-container {
     max-width: 100%;
-    max-height: 100%;
+    height: 100%;
   }
 
   .sidebar {

@@ -109,7 +109,7 @@ function handleClose(event: CustomEvent) {
   margin-top: 24px;
 }
 
-.restore-actions :deep(button) {
+.restore-actions :deep(ore-button) {
   min-width: 80px;
   padding: 8px 20px;
   font-size: 14px;

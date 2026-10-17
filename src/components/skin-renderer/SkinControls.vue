@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useSkinStore } from '@/stores/skinStore';
 import { useSkinSource } from '@/composables/useSkinSource';
+import { BackgroundType } from '@/types';
 import {
   Button,
   Card,
@@ -16,6 +17,15 @@ const { loading, error, uploadSkin, fetchSkinByUsername } = useSkinSource();
 
 const username = ref('');
 const fileInput = ref<HTMLInputElement | null>(null);
+
+const backgroundTypeLabels: Record<BackgroundType, string> = {
+  [BackgroundType.COLOR]: '纯色',
+  [BackgroundType.TRANSPARENT]: '透明'
+};
+
+const currentBackgroundTypeLabel = computed(
+  () => backgroundTypeLabels[store.background.type]
+);
 
 function handleFileChange(event: Event) {
   const target = event.target as HTMLInputElement;
@@ -63,13 +73,24 @@ function openColorPicker(refKey: string) {
             placeholder="输入玩家用户名"
             @keyup.enter="handleFetchByUsername"
           />
-          <Button
-            variant="secondary"
-            :disabled="!username.trim() || loading"
-            @click="handleFetchByUsername"
-          >
-            获取
-          </Button>
+          <template v-if="username.trim()">
+            <Button
+              variant="secondary"
+              :disabled="loading"
+              @click="handleFetchByUsername"
+            >
+              获取
+            </Button>
+          </template>
+          <template v-else>
+            <Button
+              variant="secondary"
+              disabled
+              class="fetch-btn-disabled"
+            >
+              获取
+            </Button>
+          </template>
         </div>
       </div>
 
@@ -194,7 +215,7 @@ function openColorPicker(refKey: string) {
           @update:model-value="(v: string) => store.updateBackground({ type: v as 'color' | 'transparent' })"
         >
           <div class="ore-dropdown-trigger">
-            <span class="ore-dropdown-trigger-label">纯色</span>
+            <span class="ore-dropdown-trigger-label">{{ currentBackgroundTypeLabel }}</span>
           </div>
           <div class="ore-dropdown-menu">
             <div class="ore-dropdown-item" data-value="color">纯色</div>
@@ -387,5 +408,25 @@ function openColorPicker(refKey: string) {
 
 .color-swatch:focus {
   border-color: var(--ore-color-foreground);
+}
+
+.fetch-btn-disabled,
+.fetch-btn-disabled:active,
+.fetch-btn-disabled:is([pressed], :active) {
+  cursor: not-allowed;
+  --ore-button-face-offset: 0px;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+@media (max-width: 599px) {
+  .skin-controls {
+    align-items: center;
+  }
+
+  .control-section {
+    width: 100%;
+    max-width: 420px;
+  }
 }
 </style>

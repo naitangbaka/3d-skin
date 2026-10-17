@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useSkinStore } from '@/stores/skinStore';
 import { Button } from '@oreui-web/vue';
+import { IconRetroCamera } from '@iconify-prerendered/vue-pixel';
 import { downloadDataURL, generateFilename } from '@/utils/download';
 
 const store = useSkinStore();
@@ -82,11 +83,7 @@ function handleClose() {
       class="camera-btn"
       @click="openCaptureModal"
     >
-      <svg class="camera-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="6" width="18" height="12" rx="2" />
-        <circle cx="12" cy="12" r="3" />
-        <path d="M8 6L9.5 4h5L16 6" />
-      </svg>
+      <IconRetroCamera class="camera-icon" width="18" height="18" />
       拍摄
     </Button>
 

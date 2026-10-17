@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useSkinRenderer } from '@/composables/useSkinRenderer';
 import { useSkinStore } from '@/stores/skinStore';
 import { Button, Textfield } from '@oreui-web/vue';
+import { IconRefresh, IconPencilRuler } from '@iconify-prerendered/vue-pixel';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const store = useSkinStore();
@@ -88,11 +89,23 @@ const canvasFilter = computed(() => {
     </div>
 
     <div class="corner-controls">
-      <Button variant="secondary" size="small" @click="resetCamera">
-        重置角度
+      <Button
+        variant="secondary"
+        size="small"
+        aria-label="重置角度"
+        title="重置角度"
+        @click="resetCamera"
+      >
+        <IconRefresh class="ctrl-icon" width="18" height="18" />
       </Button>
-      <Button variant="secondary" size="small" @click="openAnglePopover">
-        精确角度
+      <Button
+        variant="secondary"
+        size="small"
+        aria-label="精确角度"
+        title="精确角度"
+        @click="openAnglePopover"
+      >
+        <IconPencilRuler class="ctrl-icon" width="18" height="18" />
       </Button>
     </div>
 
@@ -109,7 +122,7 @@ const canvasFilter = computed(() => {
             <Textfield v-model="angleInputPhi" placeholder="例如 30" />
           </div>
           <div class="popover-actions">
-            <Button variant="secondary" @click="showAnglePopover = false">取消</Button>
+            <Button color="secondary" variant="default" class="angle-cancel" @click="showAnglePopover = false">取消</Button>
             <Button variant="primary" @click="applyPreciseAngle">应用</Button>
           </div>
         </div>
@@ -128,6 +141,7 @@ const canvasFilter = computed(() => {
   position: relative;
   border-radius: 8px;
   overflow: hidden;
+  padding-bottom: 40px;
 }
 
 .skin-canvas-wrapper.is-transparent {
@@ -177,6 +191,12 @@ const canvasFilter = computed(() => {
   right: 16px;
   display: flex;
   gap: 8px;
+}
+
+.ctrl-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .angle-popover-mask {
@@ -231,10 +251,10 @@ const canvasFilter = computed(() => {
     gap: 6px;
   }
 
-  .corner-controls :deep(button) {
-    padding: 4px 10px;
-    font-size: 12px;
-    min-height: 28px;
+  .corner-controls :deep(ore-button) {
+    --ore-button-unit: calc(var(--ore-size-pixel) * 1.6);
+    min-width: calc(var(--ore-button-unit) * 40);
+    padding: 0 calc(var(--ore-button-unit) * 5) calc(var(--ore-button-unit) * 2);
   }
 
   .angle-popover {

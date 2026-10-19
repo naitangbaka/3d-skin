@@ -64,8 +64,6 @@ function captureWithEffects(): Promise<string | null> {
     } else if (store.background.type === 'image' && store.background.imageUrl) {
       const wrapperStyle = getComputedStyle(wrapper);
       const bgImage = wrapperStyle.backgroundImage;
-      const bgSize = wrapperStyle.backgroundSize;
-      const bgPos = wrapperStyle.backgroundPosition;
       const bgRepeat = wrapperStyle.backgroundRepeat;
 
       ctx.fillStyle = store.background.color;
@@ -73,7 +71,7 @@ function captureWithEffects(): Promise<string | null> {
 
       if (bgImage && bgImage !== 'none') {
         const urlMatch = bgImage.match(/url\(["']?([^"')]+)["']?\)/);
-        if (urlMatch) {
+        if (urlMatch && urlMatch[1]) {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.src = urlMatch[1];

@@ -54,7 +54,6 @@ function saveBgEdit() {
 }
 
 function cancelBgEdit() {
-  store.updateBackground({ imageOffsetX: 0, imageOffsetY: 0 });
   isEditingBg.value = false;
 }
 

@@ -21,15 +21,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api/mojang': {
-        target: 'https://api.mojang.com',
+      '/api/uapis': {
+        target: 'https://uapis.cn',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/mojang/, '')
-      },
-      '/api/sessionserver': {
-        target: 'https://sessionserver.mojang.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/sessionserver/, '')
+        rewrite: (path) => path.replace(/^\/api\/uapis/, '')
       }
     }
   }

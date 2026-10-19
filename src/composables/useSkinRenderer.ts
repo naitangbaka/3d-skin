@@ -7,6 +7,15 @@ import { getDefaultGraySkin } from '@/utils/defaultSkin';
 
 let pluginRegistered = false;
 
+// 缩放基准：scale=1 时对应 zoom=BASE_ZOOM，二者互为倒数关系
+const BASE_ZOOM = 60;
+// 滑块范围，比之前更宽以覆盖滚轮自然缩放区间
+const SCALE_MIN = 0.4;
+const SCALE_MAX = 3;
+// 渲染器端 zoom 限位，确保缩放极值不会失控
+const ZOOM_MAX = 150; // scale 0.4
+const ZOOM_MIN = 20;  // scale 3.0
+
 export function useSkinRenderer(canvasRef: Ref<HTMLCanvasElement | null>) {
   const viewer = ref<SkinViewer | null>(null);
   const store = useSkinStore();
@@ -51,6 +60,12 @@ export function useSkinRenderer(canvasRef: Ref<HTMLCanvasElement | null>) {
       phi.value = p;
     };
 
+    v.onZoomChange = (zoom: number) => {
+      if (zoom > ZOOM_MAX) { v.setZoom(ZOOM_MAX); return; }
+      if (zoom < ZOOM_MIN) { v.setZoom(ZOOM_MIN); return; }
+      store.updateEffects({ scale: BASE_ZOOM / zoom });
+    };
+
     const initialRotation = v.getRotation();
     theta.value = initialRotation.theta;
     phi.value = initialRotation.phi;
@@ -84,10 +99,9 @@ export function useSkinRenderer(canvasRef: Ref<HTMLCanvasElement | null>) {
   });
 
   watch(() => store.effects.scale, (scale) => {
-    if (viewer.value) {
-      const zoom = 60 / scale;
-      viewer.value.setZoom(zoom);
-    }
+    const v = viewer.value;
+    if (!v) return;
+    v.setZoom(BASE_ZOOM / scale);
   });
 
   function takeScreenshot(type: 'png' | 'jpeg' = 'png', quality?: number): string {
@@ -96,6 +110,7 @@ export function useSkinRenderer(canvasRef: Ref<HTMLCanvasElement | null>) {
 
   function resetCamera() {
     viewer.value?.resetCamera();
+    store.updateEffects({ scale: 1 });
     const rot = viewer.value?.getRotation();
     if (rot) {
       theta.value = rot.theta;

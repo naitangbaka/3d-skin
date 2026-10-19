@@ -1,7 +1,14 @@
 import type { MojangProfileResponse } from '@/types';
 
-const MOJANG_API_BASE = import.meta.env.DEV ? '/api/mojang' : 'https://api.mojang.com';
-const SESSION_SERVER = import.meta.env.DEV ? '/api/sessionserver' : 'https://sessionserver.mojang.com';
+const PROXY_BASE = import.meta.env.VITE_MOJANG_PROXY || '';
+
+const MOJANG_API_BASE = import.meta.env.DEV
+  ? '/api/mojang'
+  : (PROXY_BASE || 'https://api.mojang.com');
+
+const SESSION_SERVER = import.meta.env.DEV
+  ? '/api/sessionserver'
+  : (PROXY_BASE || 'https://sessionserver.mojang.com');
 
 export async function getUUIDByUsername(username: string): Promise<string | null> {
   try {

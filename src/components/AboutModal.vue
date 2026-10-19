@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Modal, Button } from '@oreui-web/vue';
+import { getLicenseEntries } from '@/utils/licenses';
 
 const emit = defineEmits<{
   close: [];
@@ -8,25 +9,16 @@ const emit = defineEmits<{
 
 const showLicenses = ref(false);
 const isOpen = ref(true);
+const expandedLicense = ref<string | null>(null);
 
-interface LicenseItem {
-  name: string;
-  version: string;
-  license: string;
+const licenses = getLicenseEntries();
+
+function toggleLicense(name: string) {
+  expandedLicense.value = expandedLicense.value === name ? null : name;
 }
 
-const licenses: LicenseItem[] = [
-  { name: 'Vue', version: '3.x', license: 'MIT' },
-  { name: 'Pinia', version: '3.x', license: 'MIT' },
-  { name: 'OreUI Web', version: '0.0.1', license: 'MIT' },
-  { name: '@oreui-web/vue', version: '0.0.1', license: 'MIT' },
-  { name: '@iconify-prerendered/vue-pixel', version: '0.28.x', license: 'MIT' },
-  { name: '@daidr/minecraft-skin-renderer', version: '0.3.2', license: 'MIT' },
-  { name: 'Vite', version: '8.x', license: 'MIT' },
-  { name: 'TypeScript', version: '6.x', license: 'Apache-2.0' }
-];
-
-function handleClose() {
+function handleClose(event?: CustomEvent) {
+  if (event?.detail?.reason === 'close') return;
   isOpen.value = false;
   emit('close');
 }
@@ -42,6 +34,7 @@ function handleClose() {
           variant="default"
           @click="handleClose"
           aria-label="关闭关于窗口"
+          title="关闭关于窗口"
         >
           <svg class="about-close-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
@@ -51,14 +44,40 @@ function handleClose() {
           <div class="about-header">
             <h2 class="about-title">开源库许可证</h2>
           </div>
-          <ul class="license-list">
-            <li v-for="item in licenses" :key="item.name" class="license-item">
-              <span class="license-name">{{ item.name }}</span>
-              <span class="license-version">{{ item.version }}</span>
-              <span class="license-type">{{ item.license }}</span>
-            </li>
-          </ul>
-          <p class="license-note">本项目基于以上开源软件构建，遵循各自的开源许可协议。</p>
+          <p class="license-note">本项目基于以下开源软件构建，遵循各自的开源许可协议。点击某一项可展开查看该库的完整许可声明。</p>
+          <div class="license-scroll">
+            <div class="license-accordion">
+              <div
+                v-for="item in licenses"
+                :key="item.name"
+                class="license-item"
+                :class="{ 'is-expanded': expandedLicense === item.name }"
+              >
+                <button
+                  class="license-item-header"
+                  type="button"
+                  :aria-expanded="expandedLicense === item.name"
+                  :aria-controls="`license-panel-${item.name}`"
+                  @click="toggleLicense(item.name)"
+                >
+                  <span class="license-name">{{ item.name }}</span>
+                  <span class="license-version">{{ item.version }}</span>
+                  <span class="license-type">{{ item.license }}</span>
+                  <svg class="license-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+                <div
+                  :id="`license-panel-${item.name}`"
+                  class="license-item-body"
+                  :class="{ 'is-open': expandedLicense === item.name }"
+                >
+                  <pre class="license-text-block-long">{{ item.licenseText }}</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="license-actions">
             <Button
               color="secondary"
@@ -96,7 +115,16 @@ function handleClose() {
 <style scoped>
 .about-content {
   position: relative;
+  display: flex;
+  flex-direction: column;
   padding: 24px;
+  max-height: 70vh;
+}
+
+.license-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .about-close {
@@ -197,28 +225,47 @@ function handleClose() {
   font-size: 14px;
 }
 
-.license-list {
-  list-style: none;
+.license-note {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
   margin: 0 0 16px;
-  padding: 0;
+}
+
+.license-accordion {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .license-item {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+.license-item-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
-  border-radius: 4px;
-  background: var(--bg-primary);
+  width: 100%;
+  padding: 12px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  text-align: left;
   font-size: 14px;
+}
+
+.license-item-header:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: -2px;
 }
 
 .license-name {
   font-weight: 600;
-  color: var(--text-primary);
 }
 
 .license-version {
@@ -236,10 +283,37 @@ function handleClose() {
   background: rgba(82, 165, 53, 0.12);
 }
 
-.license-note {
-  font-size: 13px;
-  color: var(--text-secondary);
+.license-chevron {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  transition: transform 0.2s ease-out;
+}
+
+.license-item.is-expanded .license-chevron {
+  transform: rotate(180deg);
+}
+
+.license-item-body {
+  display: none;
+}
+
+.license-item-body.is-open {
+  display: block;
+}
+
+.license-text-block-long {
+  margin: 12px 16px 16px;
+  padding: 12px 16px;
+  max-height: 240px;
+  overflow: auto;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 12px;
   line-height: 1.6;
-  margin: 0;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 </style>

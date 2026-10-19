@@ -107,12 +107,12 @@ function openColorPicker(refKey: string) {
         <label>缩放</label>
         <Slider
           :model-value="store.effects.scale"
-          :min="0.5"
-          :max="2.0"
+          :min="0.4"
+          :max="3"
           :step="0.1"
           @update:model-value="(v: number) => store.updateEffects({ scale: v })"
         />
-        <span class="value-display">{{ store.effects.scale.toFixed(1) }}x</span>
+        <span class="value-display">{{ store.effects.scale.toFixed(2) }}x</span>
       </div>
 
       <div class="control-item">

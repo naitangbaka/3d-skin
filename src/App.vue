@@ -104,6 +104,8 @@ function toggleControls() {
           variant="secondary"
           size="small"
           @click="toggleControls"
+          aria-label="展开或收起设置面板"
+          title="展开或收起设置面板"
         >
           <IconBars class="menu-icon" width="14" height="14" />
         </Button>
@@ -116,6 +118,7 @@ function toggleControls() {
           size="small"
           @click="showAbout = true"
           aria-label="关于 3D-SKIN"
+          title="关于 3D-SKIN"
         >
           <IconInfoCircle class="about-icon" width="16" height="16" />
         </Button>

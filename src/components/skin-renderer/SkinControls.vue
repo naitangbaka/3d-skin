@@ -292,7 +292,7 @@ function handleBgImageChange(event: Event) {
             <label class="option-label">
               超出重复渲染
               <Checkbox
-                :checked="store.background.imageRepeat ?? true"
+                :checked="store.background.imageRepeat ?? false"
                 @input="(e: Event) => store.updateBackground({ imageRepeat: (e.target as HTMLInputElement).checked })"
               />
             </label>
@@ -492,9 +492,10 @@ function handleBgImageChange(event: Event) {
 .bg-image-preview {
   margin-top: 8px;
   width: 100%;
+  max-height: 200px;
   border-radius: 6px;
   border: 1px solid var(--ore-color-border);
-  overflow: hidden;
+  overflow: auto;
 }
 
 .bg-image-preview img {

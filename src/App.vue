@@ -199,26 +199,28 @@ html, body, #app {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  padding: 3px;
   min-height: auto;
+  min-width: auto;
   width: 36px;
-  height: 36px;
+  height: 30px;
 }
 
 .about-icon {
   display: flex;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .menu-toggle {
   display: none;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  padding: 3px;
   min-height: auto;
+  min-width: auto;
   width: 36px;
-  height: 36px;
+  height: 30px;
 }
 
 .menu-icon {
@@ -290,12 +292,20 @@ html, body, #app {
     top: 56px;
     left: 0;
     bottom: 0;
-    width: 300px;
+    width: 350px;
     z-index: 100;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     border-right: 1px solid var(--border-color);
     border-top: none;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .sidebar :deep(.skin-controls) {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .sidebar-open {

@@ -170,10 +170,10 @@ const canvasWrapperStyle = computed(() => {
     const x = store.background.imageOffsetX ?? 0;
     const y = store.background.imageOffsetY ?? 0;
     const scale = store.background.imageScale ?? 1;
-    const repeat = store.background.imageRepeat ?? true;
+    const repeat = store.background.imageRepeat ?? false;
     return {
       backgroundImage: `url(${store.background.imageUrl})`,
-      backgroundSize: `${scale * 100}%`,
+      backgroundSize: `auto ${scale * 100}%`,
       backgroundPosition: `calc(50% + ${x}px) calc(50% + ${y}px)`,
       backgroundRepeat: repeat ? 'repeat' : 'no-repeat',
       cursor: isEditingBg.value ? (isDragging.value ? 'grabbing' : 'grab') : 'default',

@@ -20,7 +20,7 @@ const DEFAULT_BACKGROUND: BackgroundSettings = {
   imageOffsetX: 0,
   imageOffsetY: 0,
   imageScale: 1,
-  imageRepeat: true
+  imageRepeat: false
 };
 
 const DEFAULT_EXPORT: ExportSettings = {

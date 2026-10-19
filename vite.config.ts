@@ -18,14 +18,5 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, 'src')
     }
-  },
-  server: {
-    proxy: {
-      '/api/uapis': {
-        target: 'https://uapis.cn',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/uapis/, '')
-      }
-    }
   }
 })

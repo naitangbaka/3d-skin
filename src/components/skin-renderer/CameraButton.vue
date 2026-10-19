@@ -24,48 +24,121 @@ function getEffectPadding(): number {
   return Math.ceil(padding);
 }
 
-function captureWithEffects(): string | null {
-  const canvas = document.querySelector('.skin-canvas') as HTMLCanvasElement;
-  if (!canvas) return null;
+function captureWithEffects(): Promise<string | null> {
+  return new Promise((resolve) => {
+    const canvas = document.querySelector('.skin-canvas') as HTMLCanvasElement;
+    const wrapper = document.querySelector('.skin-canvas-wrapper') as HTMLElement;
+    if (!canvas || !wrapper) {
+      resolve(null);
+      return;
+    }
 
-  const cssFilter = getComputedStyle(canvas).filter;
-  const padding = getEffectPadding();
+    const cssFilter = getComputedStyle(canvas).filter;
+    const padding = getEffectPadding();
 
-  const srcW = canvas.width;
-  const srcH = canvas.height;
-  const destW = srcW + padding * 2;
-  const destH = srcH + padding * 2;
+    const srcW = canvas.width;
+    const srcH = canvas.height;
+    const destW = srcW + padding * 2;
+    const destH = srcH + padding * 2;
 
-  const offscreen = document.createElement('canvas');
-  offscreen.width = destW;
-  offscreen.height = destH;
-  const ctx = offscreen.getContext('2d');
-  if (!ctx) return null;
+    const offscreen = document.createElement('canvas');
+    offscreen.width = destW;
+    offscreen.height = destH;
+    const ctx = offscreen.getContext('2d');
+    if (!ctx) {
+      resolve(null);
+      return;
+    }
 
-  if (store.isTransparent) {
-    ctx.clearRect(0, 0, destW, destH);
-  } else {
-    ctx.fillStyle = store.background.color;
-    ctx.fillRect(0, 0, destW, destH);
-  }
+    const drawSkin = () => {
+      if (cssFilter && cssFilter !== 'none') {
+        ctx.filter = cssFilter;
+      }
+      ctx.drawImage(canvas, padding, padding, srcW, srcH);
+      resolve(offscreen.toDataURL('image/png'));
+    };
 
-  if (cssFilter && cssFilter !== 'none') {
-    ctx.filter = cssFilter;
-  }
-  ctx.drawImage(canvas, padding, padding, srcW, srcH);
+    if (store.isTransparent) {
+      ctx.clearRect(0, 0, destW, destH);
+      drawSkin();
+    } else if (store.background.type === 'image' && store.background.imageUrl) {
+      const wrapperStyle = getComputedStyle(wrapper);
+      const bgImage = wrapperStyle.backgroundImage;
+      const bgSize = wrapperStyle.backgroundSize;
+      const bgPos = wrapperStyle.backgroundPosition;
+      const bgRepeat = wrapperStyle.backgroundRepeat;
 
-  return offscreen.toDataURL('image/png');
+      ctx.fillStyle = store.background.color;
+      ctx.fillRect(0, 0, destW, destH);
+
+      if (bgImage && bgImage !== 'none') {
+        const urlMatch = bgImage.match(/url\(["']?([^"')]+)["']?\)/);
+        if (urlMatch) {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.src = urlMatch[1];
+          img.onload = () => {
+            drawBackgroundImageFromStore(ctx, img, destW, destH, bgRepeat);
+            drawSkin();
+          };
+          img.onerror = () => {
+            drawSkin();
+          };
+          return;
+        }
+      }
+      drawSkin();
+    } else {
+      ctx.fillStyle = store.background.color;
+      ctx.fillRect(0, 0, destW, destH);
+      drawSkin();
+    }
+  });
 }
 
-function openCaptureModal() {
-  const dataUrl = captureWithEffects();
+function drawBackgroundImageFromStore(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  destW: number,
+  destH: number,
+  bgRepeat: string
+) {
+  const imgW = img.naturalWidth || img.width;
+  const imgH = img.naturalHeight || img.height;
+  const scale = store.background.imageScale ?? 1;
+  const offsetX = store.background.imageOffsetX ?? 0;
+  const offsetY = store.background.imageOffsetY ?? 0;
+
+  const baseScale = Math.max(destW / imgW, destH / imgH);
+  const drawW = imgW * baseScale * scale;
+  const drawH = imgH * baseScale * scale;
+
+  const centerX = (destW - drawW) / 2 + offsetX;
+  const centerY = (destH - drawH) / 2 + offsetY;
+
+  if (bgRepeat === 'repeat') {
+    const pattern = ctx.createPattern(img, 'repeat');
+    if (pattern) {
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.fillStyle = pattern;
+      ctx.fillRect(-centerX, -centerY, destW, destH);
+      ctx.restore();
+    }
+  } else {
+    ctx.drawImage(img, centerX, centerY, drawW, drawH);
+  }
+}
+
+async function openCaptureModal() {
+  const dataUrl = await captureWithEffects();
   if (!dataUrl) return;
   previewUrl.value = dataUrl;
   showModal.value = true;
 }
 
-function handleDownload() {
-  const dataUrl = captureWithEffects();
+async function handleDownload() {
+  const dataUrl = await captureWithEffects();
   if (!dataUrl) return;
   downloadDataURL(dataUrl, generateFilename());
 }

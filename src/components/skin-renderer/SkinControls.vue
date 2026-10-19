@@ -6,6 +6,7 @@ import { BackgroundType } from '@/types';
 import {
   Button,
   Card,
+  Checkbox,
   Dropdown,
   Slider,
   Switch,
@@ -17,10 +18,12 @@ const { loading, error, uploadSkin, fetchSkinByUsername } = useSkinSource();
 
 const username = ref('');
 const fileInput = ref<HTMLInputElement | null>(null);
+const bgImageInput = ref<HTMLInputElement | null>(null);
 
 const backgroundTypeLabels: Record<BackgroundType, string> = {
   [BackgroundType.COLOR]: '纯色',
-  [BackgroundType.TRANSPARENT]: '透明'
+  [BackgroundType.TRANSPARENT]: '透明',
+  [BackgroundType.IMAGE]: '图片'
 };
 
 const currentBackgroundTypeLabel = computed(
@@ -47,6 +50,18 @@ async function handleFetchByUsername() {
 function openColorPicker(refKey: string) {
   const el = document.querySelector(`[data-color-ref="${refKey}"]`) as HTMLInputElement | null;
   el?.click();
+}
+
+function handleBgImageChange(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    store.updateBackground({ imageUrl: reader.result as string });
+  };
+  reader.readAsDataURL(file);
+  target.value = '';
 }
 </script>
 
@@ -212,7 +227,7 @@ function openColorPicker(refKey: string) {
         <Dropdown
           class="bg-type-dropdown"
           :model-value="store.background.type"
-          @update:model-value="(v: string) => store.updateBackground({ type: v as 'color' | 'transparent' })"
+          @update:model-value="(v: string) => store.updateBackground({ type: v as BackgroundType })"
         >
           <div class="ore-dropdown-trigger">
             <span class="ore-dropdown-trigger-label">{{ currentBackgroundTypeLabel }}</span>
@@ -220,6 +235,7 @@ function openColorPicker(refKey: string) {
           <div class="ore-dropdown-menu">
             <div class="ore-dropdown-item" data-value="color">纯色</div>
             <div class="ore-dropdown-item" data-value="transparent">透明</div>
+            <div class="ore-dropdown-item" data-value="image">图片</div>
           </div>
         </Dropdown>
       </div>
@@ -240,6 +256,48 @@ function openColorPicker(refKey: string) {
           :value="store.background.color"
           @input="(e) => store.updateBackground({ color: (e.target as HTMLInputElement).value })"
         />
+      </div>
+
+      <div v-show="store.background.type === 'image'" class="control-item is-image">
+        <div class="bg-image-col">
+          <label>背景图片</label>
+          <div class="bg-image-row">
+            <Button
+              color="secondary"
+              size="small"
+              @click="bgImageInput?.click()"
+            >
+              选择图片
+            </Button>
+            <Button
+              v-if="store.background.imageUrl"
+              color="danger"
+              size="small"
+              @click="store.updateBackground({ imageUrl: undefined })"
+            >
+              清除
+            </Button>
+          </div>
+          <input
+            ref="bgImageInput"
+            type="file"
+            accept="image/*"
+            class="hidden-input"
+            @change="handleBgImageChange"
+          />
+          <div v-if="store.background.imageUrl" class="bg-image-preview">
+            <img :src="store.background.imageUrl" alt="背景预览" />
+          </div>
+          <div class="bg-image-options">
+            <label class="option-label">
+              超出重复渲染
+              <Checkbox
+                :checked="store.background.imageRepeat ?? true"
+                @input="(e: Event) => store.updateBackground({ imageRepeat: (e.target as HTMLInputElement).checked })"
+              />
+            </label>
+          </div>
+        </div>
       </div>
     </Card>
   </div>
@@ -408,6 +466,69 @@ function openColorPicker(refKey: string) {
 
 .color-swatch:focus {
   border-color: var(--ore-color-foreground);
+}
+
+.control-item.is-image {
+  display: block;
+}
+
+.control-item.is-image .bg-image-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.control-item.is-image label {
+  display: block;
+  margin-bottom: 4px;
+  min-width: auto;
+}
+
+.bg-image-row {
+  display: flex;
+  gap: 8px;
+}
+
+.bg-image-preview {
+  margin-top: 8px;
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--ore-color-border);
+  overflow: hidden;
+}
+
+.bg-image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.bg-image-options {
+  margin-top: 4px;
+}
+
+.option-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ore-color-foreground);
+  cursor: pointer;
+  min-width: auto;
+}
+
+.bg-image-options .option-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ore-color-foreground);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.bg-image-options .option-label :deep(ore-checkbox) {
+  transform: translateY(5px);
 }
 
 .fetch-btn-disabled,

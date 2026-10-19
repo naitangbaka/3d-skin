@@ -26,7 +26,8 @@ export interface EffectParams {
 
 export const BackgroundType = {
   COLOR: 'color',
-  TRANSPARENT: 'transparent'
+  TRANSPARENT: 'transparent',
+  IMAGE: 'image'
 } as const;
 
 export type BackgroundType = typeof BackgroundType[keyof typeof BackgroundType];
@@ -34,6 +35,11 @@ export type BackgroundType = typeof BackgroundType[keyof typeof BackgroundType];
 export interface BackgroundSettings {
   type: BackgroundType;
   color: string;
+  imageUrl?: string;
+  imageOffsetX?: number;
+  imageOffsetY?: number;
+  imageScale?: number;
+  imageRepeat?: boolean;
 }
 
 export interface ExportSettings {

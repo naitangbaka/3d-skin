@@ -10,6 +10,7 @@ import AboutModal from '@/components/AboutModal.vue';
 import { useSkinStore } from '@/stores/skinStore';
 import { hasCache, loadCache, saveCache, clearCache } from '@/utils/cache';
 import clickSound from '@/assets/sound/click.mp3';
+import titleIcon from '@/assets/title_icon.png';
 
 const store = useSkinStore();
 const showRestore = ref(false);
@@ -109,7 +110,7 @@ function toggleControls() {
         >
           <IconBars class="menu-icon" width="14" height="14" />
         </Button>
-        <span class="app-title">3D-SKIN</span>
+        <img :src="titleIcon" alt="3D-SKIN" class="app-title-icon" />
       </div>
       <div class="header-right">
         <Button
@@ -226,14 +227,10 @@ html, body, #app {
   height: 14px;
 }
 
-.app-title {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 3px;
-  color: #52A535;
-  text-shadow:
-    0 0 12px rgba(82, 165, 53, 0.25),
-    1px 1px 0 rgba(0, 0, 0, 0.4);
+.app-title-icon {
+  height: 32px;
+  width: auto;
+  display: block;
   user-select: none;
 }
 
@@ -284,9 +281,8 @@ html, body, #app {
     display: inline-flex;
   }
 
-  .app-title {
-    font-size: 20px;
-    letter-spacing: 2px;
+  .app-title-icon {
+    height: 28px;
   }
 
   .sidebar {
@@ -335,9 +331,8 @@ html, body, #app {
     padding: 0 12px;
   }
 
-  .app-title {
-    font-size: 18px;
-    letter-spacing: 2px;
+  .app-title-icon {
+    height: 24px;
   }
 
   .app-body {

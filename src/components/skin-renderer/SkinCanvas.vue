@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { useSkinRenderer } from '@/composables/useSkinRenderer';
 import { useSkinStore } from '@/stores/skinStore';
 import { Button, Textfield } from '@oreui-web/vue';
-import { IconRefresh, IconPencilRuler } from '@iconify-prerendered/vue-pixel';
+import { IconRefresh, IconPencilRuler, IconEdit } from '@iconify-prerendered/vue-pixel';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const store = useSkinStore();
@@ -13,6 +13,13 @@ const { theta, phi, resetCamera, setRotation } = useSkinRenderer(canvasRef);
 const showAnglePopover = ref(false);
 const angleInputTheta = ref('');
 const angleInputPhi = ref('');
+
+const isEditingBg = ref(false);
+const dragStartX = ref(0);
+const dragStartY = ref(0);
+const dragOffsetStartX = ref(0);
+const dragOffsetStartY = ref(0);
+const isDragging = ref(false);
 
 const thetaDeg = computed(() => ((theta.value * 180) / Math.PI).toFixed(1));
 const phiDeg = computed(() => ((phi.value * 180) / Math.PI).toFixed(1));
@@ -37,6 +44,75 @@ function handleAngleKeydown(event: KeyboardEvent) {
     applyPreciseAngle();
   }
 }
+
+function enterBgEdit() {
+  isEditingBg.value = true;
+}
+
+function saveBgEdit() {
+  isEditingBg.value = false;
+}
+
+function cancelBgEdit() {
+  store.updateBackground({ imageOffsetX: 0, imageOffsetY: 0 });
+  isEditingBg.value = false;
+}
+
+function resetBgEdit() {
+  store.updateBackground({ imageOffsetX: 0, imageOffsetY: 0, imageScale: 1 });
+}
+
+function onBgMouseDown(event: MouseEvent) {
+  if (!isEditingBg.value) return;
+  isDragging.value = true;
+  dragStartX.value = event.clientX;
+  dragStartY.value = event.clientY;
+  dragOffsetStartX.value = store.background.imageOffsetX ?? 0;
+  dragOffsetStartY.value = store.background.imageOffsetY ?? 0;
+}
+
+function onBgMouseMove(event: MouseEvent) {
+  if (!isDragging.value || !isEditingBg.value) return;
+  const dx = event.clientX - dragStartX.value;
+  const dy = event.clientY - dragStartY.value;
+  store.updateBackground({
+    imageOffsetX: dragOffsetStartX.value + dx,
+    imageOffsetY: dragOffsetStartY.value + dy,
+  });
+}
+
+function onBgMouseUp() {
+  isDragging.value = false;
+}
+
+function onBgWheel(event: WheelEvent) {
+  if (!isEditingBg.value) return;
+  event.preventDefault();
+  const delta = event.deltaY > 0 ? -0.05 : 0.05;
+  const currentScale = store.background.imageScale ?? 1;
+  const newScale = Math.max(0.1, Math.min(5.0, currentScale + delta));
+  store.updateBackground({ imageScale: newScale });
+}
+
+const canvasWrapperStyle = computed(() => {
+  if (store.background.type === 'image' && store.background.imageUrl) {
+    const x = store.background.imageOffsetX ?? 0;
+    const y = store.background.imageOffsetY ?? 0;
+    const scale = store.background.imageScale ?? 1;
+    const repeat = store.background.imageRepeat ?? true;
+    return {
+      backgroundImage: `url(${store.background.imageUrl})`,
+      backgroundSize: `${scale * 100}%`,
+      backgroundPosition: `calc(50% + ${x}px) calc(50% + ${y}px)`,
+      backgroundRepeat: repeat ? 'repeat' : 'no-repeat',
+      cursor: isEditingBg.value ? (isDragging.value ? 'grabbing' : 'grab') : 'default',
+    };
+  }
+  if (store.isTransparent) {
+    return {};
+  }
+  return { backgroundColor: store.background.color };
+});
 
 const canvasFilter = computed(() => {
   const filters: string[] = [];
@@ -73,22 +149,38 @@ const canvasFilter = computed(() => {
 <template>
   <div
     class="skin-canvas-wrapper"
-    :class="{ 'is-transparent': store.isTransparent }"
-    :style="{ backgroundColor: store.isTransparent ? undefined : store.background.color }"
+    :class="{ 'is-transparent': store.isTransparent, 'is-editing-bg': isEditingBg }"
+    :style="canvasWrapperStyle"
+    @mousedown="onBgMouseDown"
+    @mousemove="onBgMouseMove"
+    @mouseup="onBgMouseUp"
+    @mouseleave="onBgMouseUp"
+    @wheel="onBgWheel"
   >
     <canvas
       ref="canvasRef"
       class="skin-canvas"
+      :class="{ 'is-pointer-events-disabled': isEditingBg }"
       :style="{ filter: canvasFilter }"
     />
 
-    <div class="angle-info">
+    <div v-if="!isEditingBg" class="angle-info">
       <span class="angle-label">水平 {{ thetaDeg }}°</span>
       <span class="angle-sep">|</span>
       <span class="angle-label">垂直 {{ phiDeg }}°</span>
     </div>
 
-    <div class="corner-controls">
+    <div v-if="!isEditingBg" class="corner-controls">
+      <Button
+        v-if="store.background.type === 'image' && store.background.imageUrl"
+        variant="secondary"
+        size="small"
+        aria-label="编辑背景位置"
+        title="编辑背景位置"
+        @click="enterBgEdit"
+      >
+        <IconEdit class="ctrl-icon" width="18" height="18" />
+      </Button>
       <Button
         variant="secondary"
         size="small"
@@ -107,6 +199,12 @@ const canvasFilter = computed(() => {
       >
         <IconPencilRuler class="ctrl-icon" width="18" height="18" />
       </Button>
+    </div>
+
+    <div v-else class="corner-controls edit-bg-controls">
+      <Button color="secondary" size="small" @click="cancelBgEdit">取消</Button>
+      <Button color="secondary" size="small" @click="resetBgEdit">重置</Button>
+      <Button variant="primary" size="small" @click="saveBgEdit">保存</Button>
     </div>
 
     <Teleport to="body">
@@ -154,9 +252,28 @@ const canvasFilter = computed(() => {
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
 
+.skin-canvas-wrapper.is-editing-bg::after {
+  content: '拖动调整位置，滚轮缩放';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 14px;
+  border-radius: 6px;
+  pointer-events: none;
+  user-select: none;
+}
+
 .skin-canvas {
   width: 100%;
   height: 100%;
+}
+
+.skin-canvas.is-pointer-events-disabled {
+  pointer-events: none;
 }
 
 .angle-info {

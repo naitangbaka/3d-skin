@@ -15,7 +15,12 @@ const DEFAULT_EFFECTS: EffectParams = {
 
 const DEFAULT_BACKGROUND: BackgroundSettings = {
   type: 'color',
-  color: '#313233'
+  color: '#313233',
+  imageUrl: undefined,
+  imageOffsetX: 0,
+  imageOffsetY: 0,
+  imageScale: 1,
+  imageRepeat: true
 };
 
 const DEFAULT_EXPORT: ExportSettings = {

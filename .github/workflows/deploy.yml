@@ -24,13 +24,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-          registry-url: 'https://registry.npmmirror.com'
+          node-version: 22
 
       - name: Install dependencies
         run: |
-          npm install --prefer-offline --no-audit --registry https://registry.npmmirror.com
+          npm install --no-audit --registry https://registry.npmmirror.com
           npm ls
 
       - name: Build

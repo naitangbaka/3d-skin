@@ -20,6 +20,9 @@ const dragStartY = ref(0);
 const dragOffsetStartX = ref(0);
 const dragOffsetStartY = ref(0);
 const isDragging = ref(false);
+const pinchStartDist = ref(0);
+const pinchStartScale = ref(1);
+const isActiveTouch = ref(false);
 
 const thetaDeg = computed(() => ((theta.value * 180) / Math.PI).toFixed(1));
 const phiDeg = computed(() => ((phi.value * 180) / Math.PI).toFixed(1));
@@ -93,6 +96,75 @@ function onBgWheel(event: WheelEvent) {
   store.updateBackground({ imageScale: newScale });
 }
 
+function clampScale(value: number): number {
+  return Math.max(0.1, Math.min(5.0, value));
+}
+
+function touchDistance(touches: TouchList): number {
+  if (touches.length < 2) return 0;
+  const dx = touches[0]!.clientX - touches[1]!.clientX;
+  const dy = touches[0]!.clientY - touches[1]!.clientY;
+  return Math.hypot(dx, dy);
+}
+
+function startTouchDrag(touch: Touch) {
+  isDragging.value = true;
+  dragStartX.value = touch.clientX;
+  dragStartY.value = touch.clientY;
+  dragOffsetStartX.value = store.background.imageOffsetX ?? 0;
+  dragOffsetStartY.value = store.background.imageOffsetY ?? 0;
+}
+
+function onBgTouchStart(event: TouchEvent) {
+  if (!isEditingBg.value) return;
+  isActiveTouch.value = true;
+  const touches = event.touches;
+
+  if (touches.length === 1) {
+    startTouchDrag(touches[0]!);
+  } else if (touches.length === 2) {
+    isDragging.value = false;
+    pinchStartDist.value = touchDistance(touches);
+    pinchStartScale.value = store.background.imageScale ?? 1;
+  }
+}
+
+function onBgTouchMove(event: TouchEvent) {
+  if (!isEditingBg.value || !isActiveTouch.value) return;
+  event.preventDefault();
+  const touches = event.touches;
+
+  if (touches.length >= 2) {
+    isDragging.value = false;
+    const dist = touchDistance(touches);
+    if (pinchStartDist.value > 0) {
+      const newScale = clampScale(pinchStartScale.value * (dist / pinchStartDist.value));
+      store.updateBackground({ imageScale: newScale });
+    }
+  } else if (touches.length === 1 && isDragging.value) {
+    const touch = touches[0]!;
+    const dx = touch.clientX - dragStartX.value;
+    const dy = touch.clientY - dragStartY.value;
+    store.updateBackground({
+      imageOffsetX: dragOffsetStartX.value + dx,
+      imageOffsetY: dragOffsetStartY.value + dy,
+    });
+  }
+}
+
+function onBgTouchEnd(event: TouchEvent) {
+  if (!isEditingBg.value) return;
+  if (event.touches.length === 0) {
+    isDragging.value = false;
+    isActiveTouch.value = false;
+    return;
+  }
+  // 从双指捏合转为单指：继续支持拖动
+  if (event.touches.length === 1 && !isDragging.value) {
+    startTouchDrag(event.touches[0]!);
+  }
+}
+
 const canvasWrapperStyle = computed(() => {
   if (store.background.type === 'image' && store.background.imageUrl) {
     const x = store.background.imageOffsetX ?? 0;
@@ -105,6 +177,7 @@ const canvasWrapperStyle = computed(() => {
       backgroundPosition: `calc(50% + ${x}px) calc(50% + ${y}px)`,
       backgroundRepeat: repeat ? 'repeat' : 'no-repeat',
       cursor: isEditingBg.value ? (isDragging.value ? 'grabbing' : 'grab') : 'default',
+      touchAction: isEditingBg.value ? 'none' : 'auto',
     };
   }
   if (store.isTransparent) {
@@ -155,6 +228,10 @@ const canvasFilter = computed(() => {
     @mouseup="onBgMouseUp"
     @mouseleave="onBgMouseUp"
     @wheel="onBgWheel"
+    @touchstart.passive="onBgTouchStart"
+    @touchmove.prevent="onBgTouchMove"
+    @touchend="onBgTouchEnd"
+    @touchcancel="onBgTouchEnd"
   >
     <canvas
       ref="canvasRef"

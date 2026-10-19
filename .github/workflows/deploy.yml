@@ -28,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install --no-audit --registry https://registry.npmmirror.com
+          npm install --ignore-scripts --no-audit --registry https://registry.npmmirror.com
           npm ls
 
       - name: Build
